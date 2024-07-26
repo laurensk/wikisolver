@@ -1,0 +1,63 @@
+--- import ---
+
+cypher-shell -u neo4j -p securePassword123 -a bolt://localhost:7687
+
+LOAD CSV WITH HEADERS FROM 'file:///pages.csv' AS row
+CREATE (:Page {title: row.page});
+
+LOAD CSV WITH HEADERS FROM 'file:///pages.csv' AS row
+WITH row
+LIMIT 100000
+CREATE (:Page {title: row.page});
+
+CALL apoc.periodic.iterate(
+  'CALL apoc.load.csv("file:///pages.csv") YIELD map AS row RETURN row',
+  'CREATE (:Page {title: row.page})',
+  {batchSize: 10000, iterateList: true}
+);
+
+LOAD CSV WITH HEADERS FROM 'file:///links.csv' AS row
+MATCH (a:Page {title: row.from}), (b:Page {title: row.to})
+CREATE (a)-[:HAS_LINK_TO]->(b);
+
+LOAD CSV WITH HEADERS FROM 'file:///links.csv' AS row
+WITH row
+LIMIT 100000
+MATCH (a:Page {title: row.from}), (b:Page {title: row.to})
+CREATE (a)-[:HAS_LINK_TO]->(b);
+
+CALL apoc.periodic.iterate(
+  'CALL apoc.load.csv("file:///links.csv") YIELD map AS row RETURN row',
+  'MATCH (a:Page {title: row.from}), (b:Page {title: row.to}) CREATE (a)-[:HAS_LINK_TO]->(b)',
+  {batchSize: 10000, iterateList: true}
+);
+
+--- query ---
+
+Example: From "Deutschland" to "Google"
+
+MATCH (start:Page {title: 'Deutschland'}), (end:Page {title: 'Leipzig'}),
+      p = shortestPath((start)-[:HAS_LINK_TO*]-(end))
+RETURN p
+
+MATCH (start:Page {title: 'Deutschland'}), (end:Page {title: 'Google'})
+OPTIONAL MATCH p = shortestPath((start)-[:HAS_LINK_TO*]-(end))
+RETURN CASE WHEN p IS NULL THEN 'No path found' ELSE p END AS result
+
+--- new tonight ---
+
+MATCH p = (start:Page)-[:HAS_LINK_TO*2..]->(end:Page)
+RETURN p;
+
++-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| p                                                                                                                                                           |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "System"})                      |
+| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Soziales Handeln"})            |
+| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Soziales System"})             |
+| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Relation (Philosophie)"})      |
+| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Soziologische Systemtheorie"}) |
+| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Niklas Luhmann"})              |
+| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Code"})                        |
+| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Soziologie"})                  |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------+
