@@ -1,0 +1,17 @@
+services:
+  neo4j-import:
+    image: neo4j:latest
+    volumes:
+      - ./../data/neo4j-data:/data
+      - ./../data/import:/import
+    entrypoint: ["neo4j-admin", "database", "import", "full", "neo4j"]
+    command:
+      [
+        "--nodes=/import/nodes.csv",
+        "--relationships=/import/relationships.csv",
+        "--overwrite-destination",
+        "--skip-bad-relationships",
+        "--bad-tolerance=1000000000000000",
+        "--multiline-fields=true",
+        "--verbose",
+      ]

@@ -4,8 +4,18 @@ import re
 import csv
 import os
 import time
+from utils import data_dir_utils
 
-def parse_xml(file_path):
+def main():
+    if len(sys.argv) != 2:
+            print("Usage: python generate_csv.py <xml_file_name>")
+            sys.exit(1)
+        
+    xml_file_name = sys.argv[1]
+
+    dumps_dir = data_dir_utils.prepare_data_dir("dumps")
+    import_dir = data_dir_utils.prepare_data_dir("import")
+
     node_count = 0
     relationship_count = 0
 
@@ -15,18 +25,12 @@ def parse_xml(file_path):
     ns = {"mw": "http://www.mediawiki.org/xml/export-0.11/"}
 
     # Create an iterparse object
-    context = ET.iterparse(file_path, events=("start", "end"))
+    context = ET.iterparse(os.path.join(dumps_dir, xml_file_name), events=("start", "end"))
     context = iter(context)
     event, root = next(context)  # Get the root element
 
-    if not os.path.exists("import"):
-        os.mkdir("import")
-
-    if os.path.exists("import/relationships.csv"):
-        os.remove("import/relationships.csv")
-
-    f_nodes = open("import/nodes.csv", "w", newline='', encoding='utf-8')
-    f_relationships = open("import/relationships.csv", "w", newline='', encoding='utf-8')
+    f_nodes = open(os.path.join(import_dir, "nodes.csv"), "w", newline='', encoding='utf-8')
+    f_relationships = open(os.path.join(import_dir, "relationships.csv"), "w", newline='', encoding='utf-8')
 
     f_nodes.write("id:ID\n")
     f_relationships.write(":START_ID,:END_ID,:TYPE\n")
@@ -68,7 +72,7 @@ def parse_xml(file_path):
 
             # It's important to clear the processed element to save memory
             root.clear()
-    
+
     f_nodes.close()
     f_relationships.close()
 
@@ -77,9 +81,4 @@ def parse_xml(file_path):
     print(f"Successfully generated {node_count} nodes and {relationship_count} relationships in {end-start} seconds!")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python generate_csv.py <path_to_xml_file>")
-        sys.exit(1)
-    
-    file_path = sys.argv[1]
-    parse_xml(file_path)
+    main()
