@@ -1,63 +1,35 @@
---- import ---
+--- shell ---
 
 cypher-shell -u neo4j -p securePassword123 -a bolt://localhost:7687
 
-LOAD CSV WITH HEADERS FROM 'file:///pages.csv' AS row
-CREATE (:Page {title: row.page});
+--- import ---
 
-LOAD CSV WITH HEADERS FROM 'file:///pages.csv' AS row
-WITH row
-LIMIT 100000
-CREATE (:Page {title: row.page});
+docker compose up       (to start the neo4j initially and then shut it down)
 
-CALL apoc.periodic.iterate(
-  'CALL apoc.load.csv("file:///pages.csv") YIELD map AS row RETURN row',
-  'CREATE (:Page {title: row.page})',
-  {batchSize: 10000, iterateList: true}
-);
+docker run --rm \
+  -v $PWD/data:/data \
+  -v $PWD/import:/import \
+  neo4j:latest \
+  neo4j-admin database import full neo4j \
+  --nodes=/import/nodes.csv \
+  --relationships=/import/relationships.csv \
+  --overwrite-destination \
+  --skip-bad-relationships \
+  --bad-tolerance=1000000000000000 \
+  --multiline-fields=true \
+  --verbose
 
-LOAD CSV WITH HEADERS FROM 'file:///links.csv' AS row
-MATCH (a:Page {title: row.from}), (b:Page {title: row.to})
-CREATE (a)-[:HAS_LINK_TO]->(b);
+docker-compose up -d
 
-LOAD CSV WITH HEADERS FROM 'file:///links.csv' AS row
-WITH row
-LIMIT 100000
-MATCH (a:Page {title: row.from}), (b:Page {title: row.to})
-CREATE (a)-[:HAS_LINK_TO]->(b);
+--- query working ---
 
-CALL apoc.periodic.iterate(
-  'CALL apoc.load.csv("file:///links.csv") YIELD map AS row RETURN row',
-  'MATCH (a:Page {title: row.from}), (b:Page {title: row.to}) CREATE (a)-[:HAS_LINK_TO]->(b)',
-  {batchSize: 10000, iterateList: true}
-);
-
---- query ---
-
-Example: From "Deutschland" to "Google"
-
-MATCH (start:Page {title: 'Deutschland'}), (end:Page {title: 'Leipzig'}),
-      p = shortestPath((start)-[:HAS_LINK_TO*]-(end))
-RETURN p
-
-MATCH (start:Page {title: 'Deutschland'}), (end:Page {title: 'Google'})
-OPTIONAL MATCH p = shortestPath((start)-[:HAS_LINK_TO*]-(end))
-RETURN CASE WHEN p IS NULL THEN 'No path found' ELSE p END AS result
-
---- new tonight ---
-
-MATCH p = (start:Page)-[:HAS_LINK_TO*2..]->(end:Page)
+MATCH (start {id: 'Ludwig XIV.'}), 
+      (end {id: 'Künstliche Intelligenz'}),
+      p = shortestPath((start)-[:HAS_LINK_TO*]->(end))
 RETURN p;
 
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| p                                                                                                                                                           |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "System"})                      |
-| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Soziales Handeln"})            |
-| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Soziales System"})             |
-| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Relation (Philosophie)"})      |
-| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Soziologische Systemtheorie"}) |
-| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Niklas Luhmann"})              |
-| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Code"})                        |
-| (:Page {title: "Anschlussfähigkeit"})-[:HAS_LINK_TO]->(:Page {title: "Anschluss (Luhmann)"})-[:HAS_LINK_TO]->(:Page {title: "Soziologie"})                  |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------+
+| p                                                                                                      |
++--------------------------------------------------------------------------------------------------------+
+| ({id: "Ludwig XIV."})-[:HAS_LINK_TO]->({id: "Kunst"})-[:HAS_LINK_TO]->({id: "Künstliche Intelligenz"}) |
++--------------------------------------------------------------------------------------------------------+

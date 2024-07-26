@@ -2,8 +2,15 @@ import xml.etree.ElementTree as ET
 import sys
 import re
 import csv
+import os
+import time
 
 def parse_xml(file_path):
+    node_count = 0
+    relationship_count = 0
+
+    start = time.time()
+
     # Define the namespace dictionary to handle the XML namespaces
     ns = {"mw": "http://www.mediawiki.org/xml/export-0.11/"}
 
@@ -12,14 +19,22 @@ def parse_xml(file_path):
     context = iter(context)
     event, root = next(context)  # Get the root element
 
-    f_pages = open("import/pages.csv", "w", newline='', encoding='utf-8')
-    f_links = open("import/links.csv", "w", newline='', encoding='utf-8')
+    if not os.path.exists("import"):
+        os.mkdir("import")
 
-    f_pages.write("page\n")
-    f_links.write("from,to\n")
+    if os.path.exists("import/relationships.csv"):
+        os.remove("import/relationships.csv")
 
-    page_writer = csv.writer(f_pages, quoting=csv.QUOTE_NONE, escapechar='\\')
-    link_writer = csv.writer(f_links, quoting=csv.QUOTE_NONE, escapechar='\\')
+    f_nodes = open("import/nodes.csv", "w", newline='', encoding='utf-8')
+    f_relationships = open("import/relationships.csv", "w", newline='', encoding='utf-8')
+
+    f_nodes.write("id:ID\n")
+    f_relationships.write(":START_ID,:END_ID,:TYPE\n")
+
+    node_writer = csv.writer(f_nodes, quoting=csv.QUOTE_ALL, escapechar='\\')
+    relationship_writer = csv.writer(f_relationships, quoting=csv.QUOTE_ALL, escapechar='\\')
+
+    print("Generating, please wait...")
 
     for event, elem in context:
         # Check for the end event and <page> tag
@@ -42,38 +57,24 @@ def parse_xml(file_path):
                     pattern = r'\[\[([^|\]]+)(?:\|[^\]]*)?\]\]'
                     matches = re.findall(pattern, text)
 
-                    page_writer.writerow([escape_csv_value(title)])
+                    node_writer.writerow([title])
+                    node_count += 1
 
                     for m in matches:
-                        link_writer.writerow([escape_csv_value(title), escape_csv_value(m)])
+                        relationship_writer.writerow([title, m, "HAS_LINK_TO"])
+                        relationship_count += 1
                 except:
                     print(f"{title} failed and text is: {text}")
-
-            # sys.exit(0)
 
             # It's important to clear the processed element to save memory
             root.clear()
     
-    f_pages.close()
-    f_links.close()
+    f_nodes.close()
+    f_relationships.close()
 
-def escape_csv_value(value):
-    """
-    Escapes a string value to be safely included in a CSV file.
-    
-    Args:
-    value (str): The string value to escape.
-    
-    Returns:
-    str: The escaped string value.
-    """
-    if '"' in value:
-        # Escape double quotes by doubling them
-        value = value.replace('"', '""')
-    # Enclose the field in double quotes if it contains a comma, newline, or quote
-    if any(c in value for c in [',', '\n', '"']):
-        value = f'"{value}"'
-    return value
+    end = time.time()
+
+    print(f"Successfully generated {node_count} nodes and {relationship_count} relationships in {end-start} seconds!")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
