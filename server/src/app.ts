@@ -1,3 +1,4 @@
+import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import logger from "morgan";
@@ -10,6 +11,7 @@ var app = express();
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cors({ origin: ["http://localhost:4200", "https://wikisolver.laurensk.at"] }));
 
 app.get("/search", async (req, res) => {
   const from = req.query.from;
@@ -45,7 +47,7 @@ app.get("/search", async (req, res) => {
       pathElements.push(segment.end.properties.id);
     });
 
-    return res.json({ paths: pathElements, ms: end - start });
+    return res.json({ path: pathElements, ms: end - start });
   } catch {
     return res.json({ error: "Query failed" });
   } finally {

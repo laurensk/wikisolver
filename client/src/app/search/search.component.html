@@ -1,0 +1,50 @@
+<div class="container">
+  <form (submit)="submit()" [formGroup]="form">
+    <mat-form-field appearance="outline">
+      <mat-label>Language</mat-label>
+      <mat-select value="german">
+        <mat-option value="german">German</mat-option>
+      </mat-select>
+      <mat-icon matPrefix>language</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Start</mat-label>
+      <input matInput formControlName="from" />
+      <mat-icon matPrefix>pin_drop</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Destination</mat-label>
+      <input matInput formControlName="to" />
+      <mat-icon matPrefix>emoji_events</mat-icon>
+    </mat-form-field>
+
+    <button mat-flat-button [disabled]="isLoading">
+      @if (isLoading) {
+      <mat-spinner></mat-spinner>
+      } @if (!isLoading) {
+      <mat-icon>search</mat-icon>
+      } @if (!isLoading) { Find Path }
+    </button>
+  </form>
+
+  <div class="results" *ngIf="result != null">
+    @if (result.error != null) {
+    <p>Error: {{ result.error }}</p>
+    } @if (result.error == null) {
+    <div>
+      <p>Path found in {{ result.ms?.toFixed(0) }} ms</p>
+
+      <mat-list>
+        <ng-container *ngFor="let element of result.path; index as i">
+          <mat-list-item>{{ i + 1 }}. {{ element }}</mat-list-item>
+          @if ((i+1) != result.path?.length) {
+          <mat-divider></mat-divider>
+          }
+        </ng-container>
+      </mat-list>
+    </div>
+    }
+  </div>
+</div>

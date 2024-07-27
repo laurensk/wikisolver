@@ -1,0 +1,18 @@
+form {
+  margin-top: 2.5em;
+  display: flex;
+  flex-direction: column;
+
+  button {
+    margin-top: 1em;
+
+    mat-spinner {
+      // --mdc-circular-progress-active-indicator-color: white;
+      width: 25px !important;
+    }
+  }
+}
+
+.results {
+  margin-top: 2em;
+}
