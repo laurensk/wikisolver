@@ -16,3 +16,7 @@ Find the quickest path from one article to another by only clicking on links.
 ### Others
 
 Get shell in neo4j: `cypher-shell -u neo4j -p securePassword123 -a bolt://localhost:7687`
+
+### Issues/Bugs
+
+1. Links with anchors are not parsed correctly (e.g. `[[Verwaltungsgliederung Österreichs#Bund|Bund]]`).
