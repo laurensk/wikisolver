@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, isDevMode } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 interface SearchResult {
@@ -28,10 +28,10 @@ export class SearchComponent {
     const from = this.form.value.from;
     const to = this.form.value.to;
 
+    const baseUrl = isDevMode() ? 'http://localhost:3000' : '/api';
+
     try {
-      const res = await fetch(
-        'http://localhost:3000/search?from=' + encodeURIComponent(from!) + '&to=' + encodeURIComponent(to!)
-      );
+      const res = await fetch(baseUrl + '/search?from=' + encodeURIComponent(from!) + '&to=' + encodeURIComponent(to!));
 
       const json = await res.json();
       const result = json as SearchResult;
