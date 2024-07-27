@@ -32,7 +32,7 @@ def main():
     f_nodes = open(os.path.join(import_dir, "nodes.csv"), "w", newline='', encoding='utf-8')
     f_relationships = open(os.path.join(import_dir, "relationships.csv"), "w", newline='', encoding='utf-8')
 
-    f_nodes.write("id:ID\n")
+    f_nodes.write("id:ID,:LABEL\n")
     f_relationships.write(":START_ID,:END_ID,:TYPE\n")
 
     node_writer = csv.writer(f_nodes, quoting=csv.QUOTE_ALL, escapechar='\\')
@@ -61,7 +61,7 @@ def main():
                     pattern = r'\[\[([^|\]]+)(?:\|[^\]]*)?\]\]'
                     matches = re.findall(pattern, text)
 
-                    node_writer.writerow([title])
+                    node_writer.writerow([title], "Dewiki")
                     node_count += 1
 
                     for m in matches:

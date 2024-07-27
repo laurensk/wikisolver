@@ -27,8 +27,8 @@ app.get("/search", async (req, res) => {
     const start = performance.now();
 
     const result = await session.run(
-      `MATCH (start {id: $from}), 
-            (end {id: $to}),
+      `MATCH (start:Dewiki {id: $from}), 
+            (end:Dewiki {id: $to}),
             p = shortestPath((start)-[:HAS_LINK_TO*]->(end))
        RETURN p`,
       { from, to }
