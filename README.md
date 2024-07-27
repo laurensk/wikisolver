@@ -12,3 +12,7 @@ Find the quickest path from one article to another by only clicking on links.
 ### Start
 
 1. docker-compose.yml
+
+### Others
+
+Get shell in neo4j: `cypher-shell -u neo4j -p securePassword123 -a bolt://localhost:7687`
