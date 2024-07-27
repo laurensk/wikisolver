@@ -13,8 +13,7 @@ services:
   server:
     build: ./server
     depends_on:
-      database:
-        condition: service_healthy
+      - neo4j
 
   client:
     build: ./client

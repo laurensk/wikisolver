@@ -18,7 +18,7 @@ app.get("/search", async (req, res) => {
   const to = req.query.to;
 
   if (from == null || to == null) {
-    res.status(400).json({ error: "Invalid param, we need 'from' and 'to'" });
+    return res.status(400).json({ error: "Invalid param, we need 'from' and 'to'" });
   }
 
   const session = driver.session();

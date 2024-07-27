@@ -1,6 +1,7 @@
 :80
 
 route /api* {
+    uri strip_prefix /api
     reverse_proxy server:3000
 }
 
