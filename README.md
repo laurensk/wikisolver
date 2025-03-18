@@ -17,6 +17,8 @@ Find the quickest path from one article to another by only clicking on links.
 
 Get shell in neo4j: `cypher-shell -u neo4j -p securePassword123 -a bolt://localhost:7687`
 
+Create index after import: `CREATE INDEX dewiki_id_index FOR (d:Dewiki) ON (d.id);`
+
 ### Issues/Bugs
 
 1. Links with anchors are not parsed correctly (e.g. `[[Verwaltungsgliederung Österreichs#Bund|Bund]]`).
