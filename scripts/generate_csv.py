@@ -61,7 +61,7 @@ def main():
                     pattern = r'\[\[([^|\]]+)(?:\|[^\]]*)?\]\]'
                     matches = re.findall(pattern, text)
 
-                    node_writer.writerow([title], "Dewiki")
+                    node_writer.writerow([title, "Dewiki"])
                     node_count += 1
 
                     for m in matches:
